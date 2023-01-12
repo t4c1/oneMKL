@@ -22,12 +22,15 @@
 
 #include "dft/descriptor_config_helper.hpp"
 
+#include <stdarg.h>
+
 namespace oneapi {
 namespace mkl {
 namespace dft {
 namespace detail {
 
 // Compute the default strides. Modifies real_strides and complex_strides arguments.
+template <domain dom>
 void compute_default_strides(const std::vector<std::int64_t>& dimensions,
                              std::vector<std::int64_t>& input_strides,
                              std::vector<std::int64_t>& output_strides) {
@@ -37,7 +40,16 @@ void compute_default_strides(const std::vector<std::int64_t>& dimensions,
         strides[i] = strides[i + 1] * dimensions[i];
     }
     strides[0] = 0;
-    output_strides = strides;
+    if constexpr(dom == domain::COMPLEX){
+        output_strides = strides;
+    } else{
+        std::vector<std::int64_t> out_strides(rank + 1, 1);
+        for (int i = rank - 1; i > 0; --i) {
+            out_strides[i] = out_strides[i + 1] * (dimensions[i]/2 + 1);
+        }
+        out_strides[0] = 0;
+        output_strides = std::move(out_strides);
+    }
     input_strides = std::move(strides);
 }
 
@@ -135,7 +147,7 @@ descriptor<prec, dom>::descriptor(std::vector<std::int64_t> dimensions) {
         }
     }
     // Assume forward transform.
-    compute_default_strides(dimensions, values_.input_strides, values_.output_strides);
+    compute_default_strides<dom>(dimensions, values_.input_strides, values_.output_strides);
     values_.bwd_scale = 1.0;
     values_.fwd_scale = 1.0;
     values_.number_of_transforms = 1;

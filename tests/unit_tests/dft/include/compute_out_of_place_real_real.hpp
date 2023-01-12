@@ -24,14 +24,14 @@
 
 /* Test is not implemented because currently there are no available dft implementations.
  * These are stubs to make sure that dft::oneapi::mkl::unimplemented exception is thrown */
-template <oneapi::mkl::dft::precision precision, oneapi::mkl::dft::domain domain>
-int DFT_Test<precision, domain>::test_out_of_place_real_real_USM() {
+template <oneapi::mkl::dft::precision precision, oneapi::mkl::dft::domain domain, int dimms>
+int DFT_Test<precision, domain, dimms>::test_out_of_place_real_real_USM() {
     if (!init(TestType::usm)) {
         return test_skipped;
     }
 
     try {
-        descriptor_t descriptor{ size };
+        descriptor_t descriptor = descriptor_factory<descriptor_t, dimms>::get(size);
 
         descriptor.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                              oneapi::mkl::dft::config_value::NOT_INPLACE);
@@ -42,12 +42,12 @@ int DFT_Test<precision, domain>::test_out_of_place_real_real_USM() {
         auto ua_input = usm_allocator_t<PrecisionType>(cxt, *dev);
         auto ua_output = usm_allocator_t<PrecisionType>(cxt, *dev);
 
-        std::vector<PrecisionType, decltype(ua_input)> in_re(size, ua_input);
-        std::vector<PrecisionType, decltype(ua_input)> in_im(size, ua_input);
-        std::vector<PrecisionType, decltype(ua_output)> out_re(size, ua_output);
-        std::vector<PrecisionType, decltype(ua_output)> out_im(size, ua_output);
-        std::vector<PrecisionType, decltype(ua_input)> out_back_re(size, ua_input);
-        std::vector<PrecisionType, decltype(ua_input)> out_back_im(size, ua_input);
+        std::vector<PrecisionType, decltype(ua_input)> in_re(size_total, ua_input);
+        std::vector<PrecisionType, decltype(ua_input)> in_im(size_total, ua_input);
+        std::vector<PrecisionType, decltype(ua_output)> out_re(size_total, ua_output);
+        std::vector<PrecisionType, decltype(ua_output)> out_im(size_total, ua_output);
+        std::vector<PrecisionType, decltype(ua_input)> out_back_re(size_total, ua_input);
+        std::vector<PrecisionType, decltype(ua_input)> out_back_im(size_total, ua_input);
 
         std::copy(input_re.begin(), input_re.end(), in_re.begin());
         std::copy(input_im.begin(), input_im.end(), in_im.begin());
@@ -58,13 +58,13 @@ int DFT_Test<precision, domain>::test_out_of_place_real_real_USM() {
                 descriptor, in_re.data(), in_im.data(), out_re.data(), out_im.data(), dependencies);
         done.wait();
 
-        descriptor_t descriptor_back{ size };
+        descriptor_t descriptor_back = descriptor_factory<descriptor_t, dimms>::get(size);
 
         descriptor_back.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                                   oneapi::mkl::dft::config_value::NOT_INPLACE);
         descriptor_back.set_value(oneapi::mkl::dft::config_param::COMPLEX_STORAGE,
                                   oneapi::mkl::dft::config_value::REAL_REAL);
-        descriptor_back.set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, (1.0 / size));
+        descriptor_back.set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, (1.0 / size_total));
         commit_descriptor(descriptor_back, sycl_queue);
 
         done =
@@ -87,14 +87,14 @@ int DFT_Test<precision, domain>::test_out_of_place_real_real_USM() {
 
 /* Test is not implemented because currently there are no available dft implementations.
  * These are stubs to make sure that dft::oneapi::mkl::unimplemented exception is thrown */
-template <oneapi::mkl::dft::precision precision, oneapi::mkl::dft::domain domain>
-int DFT_Test<precision, domain>::test_out_of_place_real_real_buffer() {
+template <oneapi::mkl::dft::precision precision, oneapi::mkl::dft::domain domain, int dimms>
+int DFT_Test<precision, domain, dimms>::test_out_of_place_real_real_buffer() {
     if (!init(TestType::buffer)) {
         return test_skipped;
     }
 
     try {
-        descriptor_t descriptor{ size };
+        descriptor_t descriptor = descriptor_factory<descriptor_t, dimms>::get(size);
 
         descriptor.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                              oneapi::mkl::dft::config_value::NOT_INPLACE);
@@ -102,12 +102,12 @@ int DFT_Test<precision, domain>::test_out_of_place_real_real_buffer() {
                              oneapi::mkl::dft::config_value::REAL_REAL);
         commit_descriptor(descriptor, sycl_queue);
 
-        sycl::buffer<PrecisionType, 1> in_dev_re{ sycl::range<1>(size) };
-        sycl::buffer<PrecisionType, 1> in_dev_im{ sycl::range<1>(size) };
-        sycl::buffer<PrecisionType, 1> out_dev_re{ sycl::range<1>(size) };
-        sycl::buffer<PrecisionType, 1> out_dev_im{ sycl::range<1>(size) };
-        sycl::buffer<PrecisionType, 1> out_back_dev_re{ sycl::range<1>(size) };
-        sycl::buffer<PrecisionType, 1> out_back_dev_im{ sycl::range<1>(size) };
+        sycl::buffer<PrecisionType, 1> in_dev_re{ sycl::range<1>(size_total) };
+        sycl::buffer<PrecisionType, 1> in_dev_im{ sycl::range<1>(size_total) };
+        sycl::buffer<PrecisionType, 1> out_dev_re{ sycl::range<1>(size_total) };
+        sycl::buffer<PrecisionType, 1> out_dev_im{ sycl::range<1>(size_total) };
+        sycl::buffer<PrecisionType, 1> out_back_dev_re{ sycl::range<1>(size_total) };
+        sycl::buffer<PrecisionType, 1> out_back_dev_im{ sycl::range<1>(size_total) };
 
         copy_to_device(sycl_queue, input_re, in_dev_re);
         copy_to_device(sycl_queue, input_im, in_dev_im);
@@ -115,13 +115,13 @@ int DFT_Test<precision, domain>::test_out_of_place_real_real_buffer() {
         oneapi::mkl::dft::compute_forward<descriptor_t, PrecisionType, PrecisionType>(
             descriptor, in_dev_re, in_dev_im, out_dev_re, out_dev_im);
 
-        descriptor_t descriptor_back{ size };
+        descriptor_t descriptor_back = descriptor_factory<descriptor_t, dimms>::get(size);
 
         descriptor_back.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                                   oneapi::mkl::dft::config_value::NOT_INPLACE);
         descriptor_back.set_value(oneapi::mkl::dft::config_param::COMPLEX_STORAGE,
                                   oneapi::mkl::dft::config_value::REAL_REAL);
-        descriptor_back.set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, (1.0 / size));
+        descriptor_back.set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, (1.0 / size_total));
         commit_descriptor(descriptor_back, sycl_queue);
 
         oneapi::mkl::dft::compute_backward<std::remove_reference_t<decltype(descriptor_back)>,

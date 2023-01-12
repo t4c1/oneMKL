@@ -41,239 +41,35 @@ namespace {
 
 class ComputeTests : public ::testing::TestWithParam<std::tuple<sycl::device *, std::int64_t>> {};
 
-std::vector<std::int64_t> lengths{ 8, 21, 128 };
+std::vector<std::int64_t> lengths{ 8, 21, 32 };
 
-/* test_in_place_buffer() */
-TEST_P(ComputeTests, RealSinglePrecisionInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_buffer());
+#define INSTANTIATE_TEST(PRECISION, DOMAIN, DIMENSIONS, PLACE, LAYOUT, STORAGE)                                        \
+TEST_P(ComputeTests, DOMAIN ## _ ## PRECISION ## _ ## DIMENSIONS ## D_ ## PLACE ## _ ## LAYOUT ## STORAGE) {           \
+    auto test = DFT_Test<oneapi::mkl::dft::precision::PRECISION, oneapi::mkl::dft::domain::DOMAIN, DIMENSIONS>{        \
+        std::get<0>(GetParam()), std::get<1>(GetParam())                                                               \
+    };                                                                                                                 \
+    EXPECT_TRUEORSKIP(test.test_ ## PLACE ## _ ## LAYOUT ## STORAGE());                                                \
 }
 
-TEST_P(ComputeTests, RealDoublePrecisionInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_buffer());
-}
+#define INSTANTIATE_TEST_DIMENSIONS(PRECISION, DOMAIN, PLACE, LAYOUT, STORAGE)    \
+INSTANTIATE_TEST(PRECISION, DOMAIN, 1, PLACE, LAYOUT, STORAGE) \
+INSTANTIATE_TEST(PRECISION, DOMAIN, 2, PLACE, LAYOUT, STORAGE) \
+INSTANTIATE_TEST(PRECISION, DOMAIN, 3, PLACE, LAYOUT, STORAGE)
 
-TEST_P(ComputeTests, ComplexSinglePrecisionInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_buffer());
-}
+#define INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN(PLACE, LAYOUT, STORAGE) \
+INSTANTIATE_TEST_DIMENSIONS(SINGLE, COMPLEX, PLACE, LAYOUT, STORAGE)         \
+INSTANTIATE_TEST_DIMENSIONS(SINGLE, REAL, PLACE, LAYOUT, STORAGE)            \
+INSTANTIATE_TEST_DIMENSIONS(DOUBLE, COMPLEX, PLACE, LAYOUT, STORAGE)         \
+INSTANTIATE_TEST_DIMENSIONS(DOUBLE, REAL, PLACE, LAYOUT, STORAGE)
 
-TEST_P(ComputeTests, ComplexDoublePrecisionInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_buffer());
-}
+#define INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN_PLACE_LAYOUT(STORAGE)      \
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN(in_place, , STORAGE)               \
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN(in_place, real_real_, STORAGE)     \
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN(out_of_place, , STORAGE)           \
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN(out_of_place, real_real_, STORAGE)
 
-/* test_in_place_real_real_buffer() */
-TEST_P(ComputeTests, RealSinglePrecisionInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_buffer());
-}
-
-/* test_out_of_place_buffer() */
-TEST_P(ComputeTests, RealSinglePrecisionNotInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_buffer());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionNotInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_buffer());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionNotInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_buffer());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionNotInPlaceBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_buffer());
-}
-
-/* test_out_of_place_real_real_buffer */
-TEST_P(ComputeTests, RealSinglePrecisionNotInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionNotInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionNotInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_buffer());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionNotInPlaceRealRealBuffer) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_buffer());
-}
-
-/* test_in_place_USM */
-TEST_P(ComputeTests, RealSinglePrecisionInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_USM());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_USM());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_USM());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_USM());
-}
-
-/* test_in_place_real_real_USM */
-TEST_P(ComputeTests, RealSinglePrecisionInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_in_place_real_real_USM());
-}
-
-/* test_out_of_place_USM */
-TEST_P(ComputeTests, RealSinglePrecisionNotInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_USM());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionNotInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_USM());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionNotInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_USM());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionNotInPlaceUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_USM());
-}
-
-/* test_out_of_place_real_real_USM */
-TEST_P(ComputeTests, RealSinglePrecisionNotInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, RealDoublePrecisionNotInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::REAL>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, ComplexSinglePrecisionNotInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::SINGLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_USM());
-}
-
-TEST_P(ComputeTests, ComplexDoublePrecisionNotInPlaceRealRealUSM) {
-    auto test = DFT_Test<oneapi::mkl::dft::precision::DOUBLE, oneapi::mkl::dft::domain::COMPLEX>{
-        std::get<0>(GetParam()), std::get<1>(GetParam())
-    };
-    EXPECT_TRUEORSKIP(test.test_out_of_place_real_real_USM());
-}
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN_PLACE_LAYOUT(buffer)
+INSTANTIATE_TEST_DIMENSIONS_PRECISION_DOMAIN_PLACE_LAYOUT(USM)
 
 INSTANTIATE_TEST_SUITE_P(ComputeTestSuite, ComputeTests,
                          ::testing::Combine(testing::ValuesIn(devices), testing::ValuesIn(lengths)),

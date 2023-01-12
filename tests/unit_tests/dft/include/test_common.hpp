@@ -191,6 +191,27 @@ void commit_descriptor(oneapi::mkl::dft::descriptor<precision, domain> &descript
 #endif
 }
 
+template<typename DescriptorType, int dimms>
+struct descriptor_factory{};
+template<typename DescriptorType>
+struct descriptor_factory<DescriptorType, 1>{
+    static DescriptorType get(int size){
+        return DescriptorType(size);
+    }
+};
+template<typename DescriptorType>
+struct descriptor_factory<DescriptorType, 2>{
+    static DescriptorType get(int size){
+        return DescriptorType({size, size});
+    }
+};
+template<typename DescriptorType>
+struct descriptor_factory<DescriptorType, 3>{
+    static DescriptorType get(int size){
+        return DescriptorType({size, size, size});
+    }
+};
+
 template <typename T, int D>
 void copy_to_host(sycl::queue sycl_queue, sycl::buffer<T, D> &buffer_in, std::vector<T> &host_out) {
     sycl_queue.submit([&](sycl::handler &cgh) {
