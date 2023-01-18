@@ -83,8 +83,6 @@ int DFT_Test<precision, domain, dimms>::test_in_place_buffer() {
                                        error_margin, std::cout));
     }
 
-    return !::testing::Test::HasFailure();
-
     descriptor_t descriptor_back = descriptor_factory<descriptor_t, dimms>::get(size);
     descriptor_back.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                               oneapi::mkl::dft::config_value::INPLACE);
