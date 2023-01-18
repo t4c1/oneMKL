@@ -36,14 +36,19 @@ int DFT_Test<precision, domain, dimms>::test_in_place_buffer() {
     const size_t container_size =
         domain == oneapi::mkl::dft::domain::REAL ? conjugate_even_size : size;
     const size_t container_size_total = 
-        static_cast<size_t>(std::pow(container_size, dimms));
+        container_size * static_cast<size_t>(std::pow(size, dimms-1));
     if constexpr(domain == oneapi::mkl::dft::domain::REAL){
         if constexpr(dimms == 2){
-            std::vector<size_t> strides{0, 1, container_size/2};
-            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, strides.data());
-        } else if constexpr(dimms == 3){
-            std::vector<size_t> strides3{0, 1, container_size/2, container_size/2 * container_size/2};
-            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, strides3.data());
+            std::array<std::int64_t, dimms + 1> real_strides{0, size, 1};
+            std::array<std::int64_t, dimms + 1> complex_strides{0, size/2+1, 1};
+            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, real_strides.data());
+            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, complex_strides.data());
+        }
+        if constexpr(dimms == 3){
+            std::array<std::int64_t, dimms + 1> real_strides{0, size * size, size, 1};
+            std::array<std::int64_t, dimms + 1> complex_strides{0, size * (size/2+1), size, 1};
+            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, real_strides.data());
+            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, complex_strides.data());
         }
     }
 
@@ -78,17 +83,24 @@ int DFT_Test<precision, domain, dimms>::test_in_place_buffer() {
                                        error_margin, std::cout));
     }
 
+    return !::testing::Test::HasFailure();
+
     descriptor_t descriptor_back = descriptor_factory<descriptor_t, dimms>::get(size);
     descriptor_back.set_value(oneapi::mkl::dft::config_param::PLACEMENT,
                               oneapi::mkl::dft::config_value::INPLACE);
     descriptor_back.set_value(oneapi::mkl::dft::config_param::BACKWARD_SCALE, (1.0 / size_total));
     if constexpr(domain == oneapi::mkl::dft::domain::REAL){
         if constexpr(dimms == 2){
-            std::vector<size_t> strides{0, 1, container_size/2};
-            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, strides.data());
-        } else if constexpr(dimms == 3){
-            std::vector<size_t> strides{0, 1, container_size/2, container_size/2 * container_size/2};
-            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, strides.data());
+            std::array<std::int64_t, dimms + 1> real_strides{0, size, 1};
+            std::array<std::int64_t, dimms + 1> complex_strides{0, size/2+1, 1};
+            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, complex_strides.data());
+            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, real_strides.data());
+        }
+        if constexpr(dimms == 3){
+            std::array<std::int64_t, dimms + 1> real_strides{0, size * size, size, 1};
+            std::array<std::int64_t, dimms + 1> complex_strides{0, size * (size/2+1), size, 1};
+            descriptor.set_value(oneapi::mkl::dft::config_param::INPUT_STRIDES, complex_strides.data());
+            descriptor.set_value(oneapi::mkl::dft::config_param::OUTPUT_STRIDES, real_strides.data());
         }
     }
     commit_descriptor(descriptor_back, sycl_queue);

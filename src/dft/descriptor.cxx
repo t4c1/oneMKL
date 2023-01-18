@@ -44,8 +44,11 @@ void compute_default_strides(const std::vector<std::int64_t>& dimensions,
         output_strides = strides;
     } else{
         std::vector<std::int64_t> out_strides(rank + 1, 1);
-        for (int i = rank - 1; i > 0; --i) {
-            out_strides[i] = out_strides[i + 1] * (dimensions[i]/2 + 1);
+        if(rank > 2){
+            out_strides[2] = dimensions[i];
+        }
+        if(rank > 1){
+            out_strides[1] = out_strides[2] * (dimensions[1]/2 + 1);
         }
         out_strides[0] = 0;
         output_strides = std::move(out_strides);
