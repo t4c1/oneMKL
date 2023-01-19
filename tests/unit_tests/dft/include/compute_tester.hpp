@@ -77,9 +77,9 @@ struct DFT_Test {
 };
 
 template <oneapi::mkl::dft::precision precision, oneapi::mkl::dft::domain domain, int dimms>
-DFT_Test<precision, domain, dimms>::DFT_Test(sycl::device *dev, std::int64_t size)
+DFT_Test<precision, domain, dimms>::DFT_Test(sycl::device *dev, std::int64_t size_)
         : dev{ dev },
-          size{ static_cast<std::int64_t>(size) },
+          size{ static_cast<std::int64_t>(std::round(std::pow(size_, 1.0/dimms)/2)*2) }, // needs to be even for how we test real transforms
           size_total{ static_cast<std::int64_t>(std::round(std::pow(size, dimms)))},
           conjugate_even_size{ 2 * (size / 2 + 1) },
           sycl_queue{ *dev, exception_handler },

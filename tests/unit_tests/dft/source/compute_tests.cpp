@@ -41,7 +41,7 @@ namespace {
 
 class ComputeTests : public ::testing::TestWithParam<std::tuple<sycl::device *, std::int64_t>> {};
 
-std::vector<std::int64_t> lengths{ 8, 21, 32 };
+std::vector<std::int64_t> lengths{ 8, 21, 128 };
 
 #define INSTANTIATE_TEST(PRECISION, DOMAIN, DIMENSIONS, PLACE, LAYOUT, STORAGE)                                        \
 TEST_P(ComputeTests, DOMAIN ## _ ## PRECISION ## _ ## DIMENSIONS ## D_ ## PLACE ## _ ## LAYOUT ## STORAGE) {           \
