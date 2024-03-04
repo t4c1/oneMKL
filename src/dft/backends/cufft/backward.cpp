@@ -73,13 +73,20 @@ ONEMKL_EXPORT void compute_backward(descriptor_type &desc,
 
         cgh.host_task([=](sycl::interop_handle ih) {
             auto stream = detail::setup_stream(func_name, ih, plan);
+            for(CUevent e : ih.get_native_events<sycl::backend::ext_oneapi_cuda>()){
+                cuStreamWaitEvent(stream, e, CU_EVENT_WAIT_DEFAULT);
+            }
 
             auto inout_native = reinterpret_cast<fwd<descriptor_type> *>(
                 ih.get_native_mem<sycl::backend::ext_oneapi_cuda>(inout_acc));
             detail::cufft_execute<detail::Direction::Backward, fwd<descriptor_type>>(
                 func_name, stream, plan, reinterpret_cast<void *>(inout_native + offsets[0]),
                 reinterpret_cast<void *>(inout_native + offsets[1]));
-        });
+            CUevent e;
+            cuEventCreate(&e, CU_EVENT_DISABLE_TIMING);
+            cuEventRecord(e, stream);
+            ih.add_native_events<sycl::backend::ext_oneapi_cuda>({e});
+        }, {sycl::ext::codeplay::experimental::property::host_task::manual_interop_sync()});
     });
 }
 
@@ -119,6 +126,9 @@ ONEMKL_EXPORT void compute_backward(descriptor_type &desc,
 
         cgh.host_task([=](sycl::interop_handle ih) {
             auto stream = detail::setup_stream(func_name, ih, plan);
+            for(CUevent e : ih.get_native_events<sycl::backend::ext_oneapi_cuda>()){
+                cuStreamWaitEvent(stream, e, CU_EVENT_WAIT_DEFAULT);
+            }
 
             auto in_native = reinterpret_cast<void *>(
                 reinterpret_cast<bwd<descriptor_type> *>(
@@ -130,7 +140,11 @@ ONEMKL_EXPORT void compute_backward(descriptor_type &desc,
                 offsets[1]);
             detail::cufft_execute<detail::Direction::Backward, fwd<descriptor_type>>(
                 func_name, stream, plan, in_native, out_native);
-        });
+            CUevent e;
+            cuEventCreate(&e, CU_EVENT_DISABLE_TIMING);
+            cuEventRecord(e, stream);
+            ih.add_native_events<sycl::backend::ext_oneapi_cuda>({e});
+        }, {sycl::ext::codeplay::experimental::property::host_task::manual_interop_sync()});
     });
 }
 
@@ -173,10 +187,17 @@ ONEMKL_EXPORT sycl::event compute_backward(descriptor_type &desc, fwd<descriptor
 
         cgh.host_task([=](sycl::interop_handle ih) {
             auto stream = detail::setup_stream(func_name, ih, plan);
+            for(CUevent e : ih.get_native_events<sycl::backend::ext_oneapi_cuda>()){
+                cuStreamWaitEvent(stream, e, CU_EVENT_WAIT_DEFAULT);
+            }
 
             detail::cufft_execute<detail::Direction::Backward, fwd<descriptor_type>>(
                 func_name, stream, plan, inout + offsets[0], inout + offsets[1]);
-        });
+            CUevent e;
+            cuEventCreate(&e, CU_EVENT_DISABLE_TIMING);
+            cuEventRecord(e, stream);
+            ih.add_native_events<sycl::backend::ext_oneapi_cuda>({e});
+        }, {sycl::ext::codeplay::experimental::property::host_task::manual_interop_sync()});
     });
     commit->set_last_usm_workspace_event_if_rqd(sycl_event);
     return sycl_event;
@@ -219,10 +240,17 @@ ONEMKL_EXPORT sycl::event compute_backward(descriptor_type &desc, bwd<descriptor
 
         cgh.host_task([=](sycl::interop_handle ih) {
             auto stream = detail::setup_stream(func_name, ih, plan);
+            for(CUevent e : ih.get_native_events<sycl::backend::ext_oneapi_cuda>()){
+                cuStreamWaitEvent(stream, e, CU_EVENT_WAIT_DEFAULT);
+            }
 
             detail::cufft_execute<detail::Direction::Backward, fwd<descriptor_type>>(
                 func_name, stream, plan, in + offsets[0], out + offsets[1]);
-        });
+            CUevent e;
+            cuEventCreate(&e, CU_EVENT_DISABLE_TIMING);
+            cuEventRecord(e, stream);
+            ih.add_native_events<sycl::backend::ext_oneapi_cuda>({e});
+        }, {sycl::ext::codeplay::experimental::property::host_task::manual_interop_sync()});
     });
     commit->set_last_usm_workspace_event_if_rqd(sycl_event);
     return sycl_event;
